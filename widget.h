@@ -8,6 +8,7 @@
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QMenuBar>
 
 #include <QRegExpValidator>
 #include <QMessageBox>

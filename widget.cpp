@@ -19,6 +19,29 @@ Widget::Widget(QWidget *parent)
     QPushButton *btnGen = new QPushButton("抽取");    //抽取按钮
     setWidgetPointSize(btnGen, 10); //设置字体大小
 
+    QMenuBar *menuBar = new QMenuBar;
+    {//菜单
+        QMenu *menu = new QMenu("关于");
+        menuBar->addMenu(menu);
+
+        //关于作者
+        QAction *actAbout = new QAction("关于作者");
+        menu->addAction(actAbout);
+        connect(actAbout, &QAction::triggered, [=]{
+            QMessageBox::about(this, "关于作者",
+                               "作者: jkjkil4<br>"
+                               "github: <a href=https://github.com/jkjkil4/RandNumGen>https://github.com/jkjkil4/RandNumGen</a><br>"
+                               "反馈问题: jkjkil@qq.com");
+        });
+
+        //关于Qt
+        QAction *actAboutQt = new QAction("关于Qt");
+        menu->addAction(actAboutQt);
+        connect(actAboutQt, &QAction::triggered, [=]{
+            QMessageBox::aboutQt(this);
+        });
+    }
+
     connect(btnGen, &QPushButton::clicked, [=]{ //抽取按钮按下后触发的东西
         //在特定情况下将文本设置为"0"
         QString tmpText1 = editMin->text();
@@ -76,9 +99,16 @@ Widget::Widget(QWidget *parent)
     QVBoxLayout *layCentral = new QVBoxLayout;
     layCentral->addLayout(layTop);
     layCentral->addLayout(layBottom);
+    QWidget *centralWidget = new QWidget;
+    centralWidget->setLayout(layCentral);
+
+    QVBoxLayout *layMain = new QVBoxLayout;
+    layMain->setMargin(0);
+    layMain->addWidget(menuBar);
+    layMain->addWidget(centralWidget);
 
     //设置窗口属性
-    setLayout(layCentral);
+    setLayout(layMain);
     adjustSize();
     setMaximumSize(size());
     setMinimumSize(size());
