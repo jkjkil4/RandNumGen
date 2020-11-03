@@ -7,8 +7,6 @@ Widget::Widget(QWidget *parent)
     srand((uint)time(nullptr));
 
     //创建控件
-    QLineEdit *editMin = new QLineEdit("1");    //编辑最小值的输入框
-    QLineEdit *editMax = new QLineEdit("10");   //编辑最大值的输入框
     editMin->setValidator(regExp);  //设置输入框的正则表达式，下同
     editMax->setValidator(regExp);
     setWidgetPointSize(editMin, 12);    //设置输入框的字体大小，下同
@@ -113,11 +111,18 @@ Widget::Widget(QWidget *parent)
     setMaximumSize(size());
     setMinimumSize(size());
     setWindowTitle("随机数生成器");
+
+    //读取设置
+    QSettings config(APP_DIR + "/config.ini", QSettings::IniFormat);
+    editMin->setText(config.value("value/min", 1).toString());
+    editMax->setText(config.value("value/max", 10).toString());
 }
 
 Widget::~Widget()
 {
-
+    QSettings config(APP_DIR + "/config.ini", QSettings::IniFormat);
+    config.setValue("value/min", editMin->text());
+    config.setValue("value/max", editMax->text());
 }
 
 template<typename T>void Widget::setWidgetPointSize(T *widget, int pointSize) {
