@@ -124,7 +124,7 @@ void Widget::onGen() {
     int result = valueMin + rand() % offNum;
 
     //显示消息
-    QMessageBox::information(this, "结果", QString::number(result));
+    QMessageBox::information(this, "结果", QString::number(result), "确定");
 }
 
 void Widget::keyPressEvent(QKeyEvent *ev) {
