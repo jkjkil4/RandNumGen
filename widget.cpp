@@ -40,48 +40,7 @@ Widget::Widget(QWidget *parent)
         });
     }
 
-    connect(btnGen, &QPushButton::clicked, [=]{ //抽取按钮按下后触发的东西
-        //在特定情况下将文本设置为"0"
-        QString tmpText1 = editMin->text();
-        QString tmpText2 = editMax->text();
-        if(tmpText1.isEmpty() || tmpText1 == '-') {
-            editMin->setText("0");
-        }
-        if(tmpText2.isEmpty() || tmpText2 == '-') {
-            editMax->setText("0");
-        }
-\
-        //得到最小值和最大值
-        bool ok, hasErr = false;
-        int valueMin = editMin->text().toInt(&ok);
-        if(!ok) {
-            QMessageBox::warning(this, "错误", "得到最小值失败\n可能是数字过大(n>" + QString::number(INT_MAX) + ")或过小(n<" + QString::number(INT_MIN) + ")");
-            hasErr = true;
-        }
-        int valueMax = editMax->text().toInt(&ok);
-        if(!ok) {
-            QMessageBox::warning(this, "错误", "得到最大值失败\n可能是数字过大(n>" + QString::number(INT_MAX) + ")或过小(n<" + QString::number(INT_MIN) + ")");
-            hasErr = true;
-        }
-        if(hasErr) return;
-
-        //最小值不能大于最大值
-        if(valueMin > valueMax) {
-            QMessageBox::warning(this, "错误", "最小值不能大于最大值");
-            return;
-        }
-
-        //得到结果
-        long long offNum = (long long)valueMax - valueMin + 1;
-        if(offNum > RAND_MAX + 1) {
-            QMessageBox::warning(this, "错误", "取值范围超过了随机数的能力上限 (" + QString::number(RAND_MAX) + ")");
-            return;
-        }
-        int result = valueMin + rand() % offNum;
-
-        //显示消息
-        QMessageBox::information(this, "结果", QString::number(result));
-    });
+    connect(btnGen, SIGNAL(clicked()), this, SLOT(onGen()));
 
     //创建布局
     QHBoxLayout *layTop = new QHBoxLayout;
@@ -123,6 +82,56 @@ Widget::~Widget()
     QSettings config(APP_DIR + "/config.ini", QSettings::IniFormat);
     config.setValue("value/min", editMin->text());
     config.setValue("value/max", editMax->text());
+}
+
+void Widget::onGen() {
+    //在特定情况下将文本设置为"0"
+    QString tmpText1 = editMin->text();
+    QString tmpText2 = editMax->text();
+    if(tmpText1.isEmpty() || tmpText1 == '-') {
+        editMin->setText("0");
+    }
+    if(tmpText2.isEmpty() || tmpText2 == '-') {
+        editMax->setText("0");
+    }
+\
+    //得到最小值和最大值
+    bool ok, hasErr = false;
+    int valueMin = editMin->text().toInt(&ok);
+    if(!ok) {
+        QMessageBox::warning(this, "错误", "得到最小值失败\n可能是数字过大(n>" + QString::number(INT_MAX) + ")或过小(n<" + QString::number(INT_MIN) + ")");
+        hasErr = true;
+    }
+    int valueMax = editMax->text().toInt(&ok);
+    if(!ok) {
+        QMessageBox::warning(this, "错误", "得到最大值失败\n可能是数字过大(n>" + QString::number(INT_MAX) + ")或过小(n<" + QString::number(INT_MIN) + ")");
+        hasErr = true;
+    }
+    if(hasErr) return;
+
+    //最小值不能大于最大值
+    if(valueMin > valueMax) {
+        QMessageBox::warning(this, "错误", "最小值不能大于最大值");
+        return;
+    }
+
+    //得到结果
+    long long offNum = (long long)valueMax - valueMin + 1;
+    if(offNum > RAND_MAX + 1) {
+        QMessageBox::warning(this, "错误", "取值范围超过了随机数的能力上限 (" + QString::number(RAND_MAX) + ")");
+        return;
+    }
+    int result = valueMin + rand() % offNum;
+
+    //显示消息
+    QMessageBox::information(this, "结果", QString::number(result));
+}
+
+void Widget::keyPressEvent(QKeyEvent *ev) {
+    if(ev->key() == Qt::Key_Enter || ev->key() == Qt::Key_Return) {
+        onGen();
+        ev->ignore();
+    }
 }
 
 template<typename T>void Widget::setWidgetPointSize(T *widget, int pointSize) {

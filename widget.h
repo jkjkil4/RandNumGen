@@ -11,21 +11,29 @@
 #include <QMenuBar>
 #include <QSettings>
 #include <QCoreApplication>
+#include <QKeyEvent>
 
 #include <QRegExpValidator>
 #include <QMessageBox>
+
+#include <QDebug>
 
 #define APP_DIR QCoreApplication::applicationDirPath()
 
 class Widget : public QWidget
 {
     Q_OBJECT
+protected:
+    void keyPressEvent(QKeyEvent *ev) override;
 
 public:
     Widget(QWidget *parent = nullptr);
-    ~Widget();
+    ~Widget() override;
 
     template<typename T>void setWidgetPointSize(T *widget, int pointSize);
+
+private slots:
+    void onGen();
 
 private:
     //正则表达式
