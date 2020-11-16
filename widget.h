@@ -10,7 +10,6 @@
 #include <QVBoxLayout>
 #include <QMenuBar>
 #include <QSettings>
-#include <QCoreApplication>
 #include <QKeyEvent>
 
 #include <QRegExpValidator>
@@ -18,7 +17,9 @@
 
 #include <QDebug>
 
-#define APP_DIR QCoreApplication::applicationDirPath()
+#include "header.h"
+#include "gendialog.h"
+#include "genresult.h"
 
 class Widget : public QWidget
 {
@@ -32,8 +33,13 @@ public:
 
     template<typename T>void setWidgetPointSize(T *widget, int pointSize);
 
+    bool getValue(int& valueMin, int& valueMax);
+    bool check(int min, int max, QString* err = nullptr);
+    int randNum(int min, int max);
+
 private slots:
     void onGen();
+    void onGenMore();
 
 private:
     //正则表达式

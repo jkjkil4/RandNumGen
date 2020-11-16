@@ -17,6 +17,8 @@ Widget::Widget(QWidget *parent)
     QPushButton *btnGen = new QPushButton("抽取");    //抽取按钮
     setWidgetPointSize(btnGen, 10); //设置字体大小
 
+    QPushButton *btnGenMore = new QPushButton("抽取多次");
+
     QMenuBar *menuBar = new QMenuBar;
     {//菜单
         QMenu *menu = new QMenu("关于");
@@ -41,6 +43,7 @@ Widget::Widget(QWidget *parent)
     }
 
     connect(btnGen, SIGNAL(clicked()), this, SLOT(onGen()));
+    connect(btnGenMore, SIGNAL(clicked()), this, SLOT(onGenMore()));
 
     //创建布局
     QHBoxLayout *layTop = new QHBoxLayout;
@@ -48,10 +51,14 @@ Widget::Widget(QWidget *parent)
     layTop->addWidget(label);
     layTop->addWidget(editMax);
 
+    QHBoxLayout *layGenMore = new QHBoxLayout;
+    layGenMore->addStretch();
+    layGenMore->addWidget(btnGenMore);
+
     QHBoxLayout *layBottom = new QHBoxLayout;
-    layBottom->addStretch();
+    layBottom->addStretch(1);
     layBottom->addWidget(btnGen);
-    layBottom->addStretch();
+    layBottom->addLayout(layGenMore, 1);
 
     QVBoxLayout *layCentral = new QVBoxLayout;
     layCentral->addLayout(layTop);
@@ -84,7 +91,7 @@ Widget::~Widget()
     config.setValue("value/max", editMax->text());
 }
 
-void Widget::onGen() {
+bool Widget::getValue(int &valueMin, int &valueMax) {
     //在特定情况下将文本设置为"0"
     QString tmpText1 = editMin->text();
     QString tmpText2 = editMax->text();
@@ -94,37 +101,93 @@ void Widget::onGen() {
     if(tmpText2.isEmpty() || tmpText2 == '-') {
         editMax->setText("0");
     }
-\
+
     //得到最小值和最大值
     bool ok, hasErr = false;
-    int valueMin = editMin->text().toInt(&ok);
+    int tmpValueMin = editMin->text().toInt(&ok);
     if(!ok) {
         QMessageBox::warning(this, "错误", "得到最小值失败\n可能是数字过大(n>" + QString::number(INT_MAX) + ")或过小(n<" + QString::number(INT_MIN) + ")");
         hasErr = true;
     }
-    int valueMax = editMax->text().toInt(&ok);
+    int tmpValueMax = editMax->text().toInt(&ok);
     if(!ok) {
         QMessageBox::warning(this, "错误", "得到最大值失败\n可能是数字过大(n>" + QString::number(INT_MAX) + ")或过小(n<" + QString::number(INT_MIN) + ")");
         hasErr = true;
     }
-    if(hasErr) return;
+    if(hasErr) return false;
 
+    valueMin = tmpValueMin;
+    valueMax = tmpValueMax;
+    return true;
+}
+
+bool Widget::check(int min, int max, QString *err) {
     //最小值不能大于最大值
-    if(valueMin > valueMax) {
-        QMessageBox::warning(this, "错误", "最小值不能大于最大值");
-        return;
+    if(min > max) {
+        if(err)
+            *err = "最小值不能大于最大值";
+        return false;
     }
 
     //得到结果
-    long long offNum = (long long)valueMax - valueMin + 1;
+    long long offNum = (long long)max - min + 1;
     if(offNum > RAND_MAX + 1) {
-        QMessageBox::warning(this, "错误", "取值范围超过了随机数的能力上限 (" + QString::number(RAND_MAX) + ")");
-        return;
+        if(err)
+            *err = "取值范围超过了随机数的能力上限 (" + QString::number(RAND_MAX) + ")";
+        return false;
     }
-    int result = valueMin + rand() % offNum;
+    return true;
+}
 
-    //显示消息
-    QMessageBox::information(this, "结果", QString::number(result), "确定");
+int Widget::randNum(int min, int max) {
+    long long offNum = (long long)max - min + 1;
+    return min + rand() % offNum;
+}
+
+void Widget::onGen() {
+    int valueMin = 0, valueMax = 0;
+    if(getValue(valueMin, valueMax)) {
+        QString err;
+        if(check(valueMin, valueMax, &err)) {
+            int result = randNum(valueMin, valueMax);
+            QMessageBox::information(this, "结果", QString::number(result), "确定");
+        } else {
+            QMessageBox::warning(this, "错误", err);
+        }
+    }
+}
+
+void Widget::onGenMore() {
+    int valueMin = 0, valueMax = 0;
+    if(getValue(valueMin, valueMax)) {
+        QString err;
+        if(check(valueMin, valueMax, &err)) {
+            GenDialog dialog;
+            int times = dialog.exec();
+            qDebug() << times;
+            if(times) {
+                bool isNoRepeat = dialog.isNoRepeat();
+                long long offNum = (long long)valueMax - valueMin + 1;
+                if(isNoRepeat && times > offNum) {
+                    QMessageBox::warning(this, "错误", "若勾选了 \"不重复\"\n抽取数量不能大于可抽取数量");
+                    return;
+                }
+                QVector<int> vResults;
+                for(int i = 0; i < times; i++) {
+                    int result = randNum(valueMin, valueMax);
+                    if(isNoRepeat && vResults.contains(result)) {
+                        i--;
+                        continue;
+                    }
+                    vResults << result;
+                }
+                GenResult genResult(vResults);
+                genResult.exec();
+            }
+        } else {
+            QMessageBox::warning(this, "错误", err);
+        }
+    }
 }
 
 void Widget::keyPressEvent(QKeyEvent *ev) {

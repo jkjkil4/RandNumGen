@@ -27,10 +27,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        gendialog.cpp \
+        genresult.cpp \
         main.cpp \
         widget.cpp
 
 HEADERS += \
+        gendialog.h \
+        genresult.h \
+        header.h \
         widget.h
 
 # Default rules for deployment.
