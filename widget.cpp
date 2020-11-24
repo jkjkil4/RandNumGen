@@ -164,7 +164,7 @@ void Widget::onGenMore() {
         if(check(valueMin, valueMax, &err)) {
             GenDialog dialog;
             int times = dialog.exec();
-            qDebug() << times;
+            //qDebug() << times;
             if(times) {
                 bool isNoRepeat = dialog.isNoRepeat();
                 long long offNum = (long long)valueMax - valueMin + 1;
